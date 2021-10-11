@@ -1,0 +1,60 @@
+import os
+import hashlib
+import ast
+
+def hash (lstfile):
+    lst_hash = {}
+    for i in range (len(lstfile)):
+        try:
+            file_check = open(lstfile[i], "rb") #read binary istället för read
+            data = file_check.read()
+            md5_thing = hashlib.md5(data)
+            lst_hash[lstfile[i]] = md5_thing.hexdigest()
+            file_check.close()
+        except:
+            lst_hash[lstfile[i]] = " missing hash"
+    return lst_hash
+
+def library(folderName): #dela upp i 2 olika funktioner (en för hash och en för filnamn)
+    lst_filename = []
+    list_of_filenames = os.listdir(folderName)
+    for i in range (len(list_of_filenames)):
+        filename = folderName + "\\" + list_of_filenames[i]
+        if list_of_filenames[i] != "check.txt":
+            if os.path.isdir(filename):
+                filename_return = folderName + "\\" + list_of_filenames[i]
+                lst_filename = lst_filename + library(filename_return)
+            else:
+                lst_filename.append(filename)
+    return lst_filename 
+
+def compare(folder, dict):
+    file_open = open(folder + 'check.txt', 'r')
+    dict_file = ast.literal_eval(file_open.read()) #makes the string into a dictionary
+    if dict_file == dict: #if no changes are made
+        print("no changes")
+    else:
+        for key, value in dict.items():
+            if key in dict_file:
+                if value != dict_file[key]:
+                    print(key + " has been a changed")
+            elif key not in dict_file:
+                print(key + " is a new file")
+        for key, value in dict_file.items():
+            if key not in dict:
+                print(key + " has been removed")
+    file_open.close()
+
+def main(folder): #fixar sen när jag delar upp funktionen. ska in i en av funktionerna.
+    list_of_file = library(folder)
+    dict_of_hash = hash(list_of_file)
+    try:
+        compare(folder, dict_of_hash)
+    except: 
+        print("first run")
+    f = open(folder + "check.txt", "w")
+    f.write(str(dict_of_hash))
+    f.close()
+
+folder_name = str(input("enter your location with dubble backslash: ") + "\\")
+main(folder_name)
